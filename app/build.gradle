@@ -34,6 +34,7 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     compile 'com.kontaktio:sdk:3.2.0'
     compile 'com.google.android.gms:play-services-nearby:9.0.0'
+    compile 'com.android.support:recyclerview-v7:23.0.0'
 }
 repositories {
     mavenCentral()
