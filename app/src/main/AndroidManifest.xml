@@ -7,6 +7,15 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+
+    <uses-permission
+        android:name="android.permission.READ_SYNC_SETTINGS"/>
+    <uses-permission
+        android:name="android.permission.WRITE_SYNC_SETTINGS"/>
+    <uses-permission
+        android:name="android.permission.AUTHENTICATE_ACCOUNTS"/>
 
     <application
         android:allowBackup="true"
@@ -15,15 +24,40 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
+        <service
+            android:name="com.think.mozzo_test.sync.DataSyncService"
+            android:exported="true"
+            android:process=":sync">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter"/>
+            </intent-filter>
+            <meta-data android:name="android.content.SyncAdapter"
+                android:resource="@xml/sync_adapter" />
+        </service>
+
+        <service android:name=".sync.AuthenticatorService">
+            <intent-filter>
+                <action android:name="android.accounts.AccountAuthenticator" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accounts.AccountAuthenticator"
+                android:resource="@xml/authenticator" />
+        </service>
+
+        <service android:name=".GeofenceService"/>
         <meta-data
             android:name="com.google.android.nearby.messages.API_KEY"
             android:value="AIzaSyCVJsDp5fFT7ualr-WcTRX0fIjxf7mlm4Q" />
+
+        <service android:name="com.kontakt.sdk.android.ble.service.ProximityService" android:exported="false"/>
 
         <meta-data
             android:name="kontakt.io.API_KEY"
             android:value="WCRWkRjfRwazVAFtmKvrpTxwNtennzqU" />
 
-        <service android:name="com.kontakt.sdk.android.ble.service.ProximityService" android:exported="false"/>
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
 
         <activity android:name=".MainActivity">
             <intent-filter>
@@ -34,8 +68,9 @@
         </activity>
 
         <provider android:name=".UrlHistoryProvider"
-            android:authorities="com.think.mozzo_test.UrlHistoryProvider"/>
+            android:authorities="com.think.mozzo_test_java.UrlHistoryProvider"/>
 
+        <activity android:name=".LoaderActivity"/>
     </application>
 
 </manifest>

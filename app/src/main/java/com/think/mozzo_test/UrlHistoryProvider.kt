@@ -1,6 +1,5 @@
 package com.think.mozzo_test
 
-
 import android.content.ContentProvider
 import android.content.ContentUris
 import android.content.ContentValues
