@@ -8,6 +8,7 @@ import android.support.v4.content.Loader
 import android.support.v4.widget.CursorAdapter
 import android.support.v4.widget.SimpleCursorAdapter
 import android.support.v7.app.AppCompatActivity
+import android.view.Menu
 import android.widget.ArrayAdapter
 import android.widget.ListView
 
@@ -21,7 +22,7 @@ class LoaderActivity : AppCompatActivity(), LoaderManager.LoaderCallbacks<Cursor
 
 
     internal var ls: ListView? = null
-    internal var aa: ArrayAdapter<Any>? = null!!
+    internal var aa: ArrayAdapter<Any>? = null
     internal var cursorAdapter: CursorAdapter? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,8 +32,11 @@ class LoaderActivity : AppCompatActivity(), LoaderManager.LoaderCallbacks<Cursor
         val arrayList = ArrayList<Any>()
         aa = ArrayAdapter(this, R.layout.my_text_view, arrayList)
 
-        cursorAdapter = SimpleCursorAdapter(this, R.layout.loader_layout, null, arrayOf("_ID", "TIME"), intArrayOf(R.id._id, R.id.TIME))
-        ls?.adapter = aa
+        cursorAdapter = SimpleCursorAdapter(this, R.layout.loader_layout, null, arrayOf("_id", "TIME"), intArrayOf(R.id._id, R.id.TIME))
+        ls?.adapter = cursorAdapter
+
+        supportLoaderManager.initLoader(0, null, this)
+
     }
 
 
@@ -44,7 +48,8 @@ class LoaderActivity : AppCompatActivity(), LoaderManager.LoaderCallbacks<Cursor
     override fun onLoadFinished(loader: Loader<Cursor>, data: Cursor) {
 
         cursorAdapter?.swapCursor(data)
-
+        //        System.out.println(data.getCount());
+        cursorAdapter?.notifyDataSetChanged()
     }
 
     override fun onLoaderReset(loader: Loader<Cursor>) {
