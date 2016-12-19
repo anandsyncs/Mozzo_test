@@ -97,6 +97,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, G
                 if (myDataset!![0] == initialData) {
                     myDataset!!.removeAt(0)
                 }
+
                 myDataset!!.add(messageAsString)
                 mAdapter!!.notifyDataSetChanged()
                 insertIntoContentProvider(messageAsString)
@@ -105,11 +106,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, G
             override fun onLost(message: Message?) {
                 val messageAsString = String(message!!.content)
                 Log.d(TAG, "Lost sight of message: " + messageAsString)
-                for (i in myDataset!!.indices) {
-                    if (myDataset!![i] == messageAsString) {
-                        myDataset!!.removeAt(i)
-                    }
-                }
+
                 if (myDataset!!.size == 0) {
                     myDataset!!.add(initialData)
                 }
