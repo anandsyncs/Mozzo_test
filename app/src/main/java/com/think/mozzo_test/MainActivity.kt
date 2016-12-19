@@ -1,19 +1,32 @@
 package com.think.mozzo_test
 
+import android.accounts.Account
+import android.accounts.AccountManager
 import android.app.Activity
+import android.app.PendingIntent
 import android.content.ContentValues
+import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
 import android.net.Uri
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.provider.SyncStateContract
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.Toast
 
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.api.GoogleApiClient
+import com.google.android.gms.common.api.ResultCallback
+import com.google.android.gms.common.api.Status
+import com.google.android.gms.location.Geofence
+import com.google.android.gms.location.GeofencingRequest
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.messages.Message
 import com.google.android.gms.nearby.messages.MessageListener
@@ -30,11 +43,14 @@ import com.kontakt.sdk.android.common.profile.IBeaconDevice
 import com.kontakt.sdk.android.common.profile.IBeaconRegion
 import com.kontakt.sdk.android.common.profile.IEddystoneDevice
 import com.kontakt.sdk.android.common.profile.IEddystoneNamespace
+import com.think.mozzo_test.data.Constants
+import com.think.mozzo_test.data.Constants.LANDMARKS
+import java.util.*
 
-import java.util.ArrayList
+class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, ResultCallback<Status> {
+    internal var mAccount: Account? = null
 
-class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
-
+    protected var mGeofenceList: ArrayList<Geofence>? = null
     private var mGoogleApiClient: GoogleApiClient? = null
     private var mMessageListener: MessageListener? = null
     private val proximityManager: ProximityManager? = null
@@ -47,16 +63,32 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, G
 
     private val TAG = "Java Sample"
     private val initialData = "Searching for URL's"
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.main_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        startActivity(Intent(this, LoaderActivity::class.java))
+        return super.onOptionsItemSelected(item)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        //        mAccount = CreateSyncAccount(this);
         //        KontaktSDK.initialize(this);
 
         mGoogleApiClient = GoogleApiClient.Builder(this)
                 .addApi(Nearby.MESSAGES_API)
+                .addApi(LocationServices.API)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .build()
+
+        mGeofenceList = ArrayList<Geofence>()
+        populateGeofenceList()
 
         mMessageListener = object : MessageListener() {
             override fun onFound(message: Message) {
@@ -160,9 +192,11 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, G
     override fun onConnected(bundle: Bundle?) {
 
         subscribe()
+        registerGeoFence()
     }
 
     override fun onConnectionSuspended(i: Int) {
+        mGoogleApiClient!!.connect()
 
         //        Log.i()
     }
@@ -208,4 +242,93 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, G
         //        proximityManager = null;
         super.onStop()
     }
+
+    fun populateGeofenceList() {
+        for (entry in LANDMARKS) {
+            mGeofenceList?.add(Geofence.Builder()
+                    .setRequestId(entry.key)
+                    .setCircularRegion(
+                            entry.value.latitude,
+                            entry.value.longitude,
+                            Constants.GEOFENCE_RADIUS_IN_METERS
+                    )
+                    .setExpirationDuration(Constants.GEOFENCE_EXPIRATION_IN_MILLISECONDS)
+                    .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER or Geofence.GEOFENCE_TRANSITION_EXIT)
+                    .build())
+        }
+    }
+
+    fun registerGeoFence() {
+        try {
+            LocationServices.GeofencingApi.addGeofences(
+                    mGoogleApiClient,
+                    geofencingRequest,
+                    geofencePendingIntent
+            ).setResultCallback(this) // Result processed in onResult().
+        } catch (securityException: SecurityException) {
+        }
+
+    }
+
+    private val geofencingRequest: GeofencingRequest
+        get() {
+            val builder = GeofencingRequest.Builder()
+            builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
+            builder.addGeofences(mGeofenceList)
+            return builder.build()
+        }
+
+    private val geofencePendingIntent: PendingIntent
+        get() {
+            val intent = Intent(this, GeofenceService::class.java)
+            return PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+        }
+
+
+    override fun onResult(status: Status) {
+        if (status.isSuccess) {
+            Toast.makeText(
+                    this,
+                    "Geofences Added Successfully",
+                    Toast.LENGTH_SHORT
+            ).show()
+        } else {
+            println("GeoFence Not Added")
+        }
+
+    }
+
+    companion object {
+
+        val AUTHORITY = "com.think.mozzo_test_java"
+        val ACCOUNT_TYPE = "com.think.mozzo_test.datasyncservice"
+        val ACCOUNT = "dummyaccount"
+
+
+        fun CreateSyncAccount(context: Context): Account? {
+            // Create the account type and default account
+            val newAccount = Account(
+                    ACCOUNT, ACCOUNT_TYPE)
+            // Get an instance of the Android account manager
+            val accountManager = context.getSystemService(
+                    Context.ACCOUNT_SERVICE) as AccountManager
+            /*
+         * Add the account and account type, no password or user data
+         * If successful, return the Account object, otherwise report an error.
+         */
+            if (accountManager.addAccountExplicitly(newAccount, null, null)) {
+                return newAccount
+            } else {
+                /*
+             * The account exists or some other error occurred. Log this, report it,
+             * or handle it internally.
+             */
+                Log.d("TAG", "Error Sync Adapter Not Configured")
+                return null
+
+            }
+        }
+    }
 }
+
+

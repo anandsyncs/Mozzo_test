@@ -68,7 +68,7 @@
         </activity>
 
         <provider android:name=".UrlHistoryProvider"
-            android:authorities="com.think.mozzo_test_java.UrlHistoryProvider"/>
+            android:authorities="com.think.mozzo_test.UrlHistoryProvider"/>
 
         <activity android:name=".LoaderActivity"/>
     </application>
