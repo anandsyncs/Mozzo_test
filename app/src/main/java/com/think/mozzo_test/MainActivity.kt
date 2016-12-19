@@ -1,13 +1,16 @@
 package com.think.mozzo_test
 
 import android.app.Activity
+import android.content.ContentValues
 import android.content.Intent
 import android.content.IntentSender
+import android.net.Uri
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.util.Log
+import android.widget.Toast
 
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.api.GoogleApiClient
@@ -64,6 +67,7 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, G
                 }
                 myDataset!!.add(messageAsString)
                 mAdapter!!.notifyDataSetChanged()
+                insertIntoContentProvider(messageAsString)
             }
 
             override fun onLost(message: Message?) {
@@ -88,15 +92,11 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, G
 
         mRecyclerView = findViewById(R.id.my_recycler_view) as RecyclerView?
 
-        // use this setting to improve performance if you know that changes
-        // in content do not change the layout size of the RecyclerView
         mRecyclerView!!.setHasFixedSize(true)
 
-        // use a linear layout manager
         mLayoutManager = LinearLayoutManager(this)
         mRecyclerView!!.layoutManager = mLayoutManager
 
-        // specify an adapter (see also next example)
         myDataset = ArrayList<String>()
         myDataset!!.add(initialData)
         mAdapter = MaterialAdapter(myDataset as ArrayList<String>)
@@ -105,6 +105,22 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, G
         println("Done")
 
     }
+
+    private fun insertIntoContentProvider(url: String) {
+        val values = ContentValues()
+        values.put(UrlHistoryProvider._ID,
+                url)
+
+        values.put(UrlHistoryProvider.TIME,
+                System.currentTimeMillis())
+
+        val uri = contentResolver.insert(
+                UrlHistoryProvider.CONTENT_URI, values)
+
+        Toast.makeText(baseContext,
+                "Data Updated", Toast.LENGTH_SHORT).show()
+    }
+
 
     //    private IBeaconListener createIBeaconListener() {
     //        return new SimpleIBeaconListener() {
