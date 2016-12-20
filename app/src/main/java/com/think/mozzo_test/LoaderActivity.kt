@@ -22,25 +22,22 @@ class LoaderActivity : AppCompatActivity(), LoaderManager.LoaderCallbacks<Cursor
 
 
     internal var ls: ListView? = null
-    internal var aa: ArrayAdapter<Any>? = null
     internal var cursorAdapter: CursorAdapter? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.loader_activity)
-        ls = findViewById(R.id.list_view) as ListView?
-        val arrayList = ArrayList<Any>()
-        aa = ArrayAdapter(this, R.layout.my_text_view, arrayList)
+        ls = findViewById(R.id.list_view) as ListView
 
         cursorAdapter = SimpleCursorAdapter(this, R.layout.loader_layout, null, arrayOf("_id", "TIME"), intArrayOf(R.id._id, R.id.TIME))
-        ls?.adapter = cursorAdapter
+        (ls as ListView).adapter = cursorAdapter
 
         supportLoaderManager.initLoader(0, null, this)
 
     }
 
 
-    override fun onCreateLoader(id: Int, args: Bundle): Loader<Cursor> {
+    override fun onCreateLoader(id: Int, args: Bundle?): Loader<Cursor> {
         val loader = CursorLoader(this, UrlHistoryProvider.CONTENT_URI, null, null, null, null)
         return loader
     }

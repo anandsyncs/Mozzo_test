@@ -115,9 +115,9 @@ class MainActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, G
         }
 
 
-        //        proximityManager = new ProximityManager(this);
-        //        proximityManager.setIBeaconListener(createIBeaconListener());
-        //        proximityManager.setEddystoneListener(createEddystoneListener());
+//        proximityManager = new ProximityManager(this);
+//        proximityManager.setIBeaconListener(createIBeaconListener());
+//        proximityManager.setEddystoneListener(createEddystoneListener());
 
         mRecyclerView = findViewById(R.id.my_recycler_view) as RecyclerView?
 
